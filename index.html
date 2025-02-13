@@ -5,20 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vale en el laberinto 💖</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             height: 100vh;
             background-color: #ffebee;
             font-family: Arial, sans-serif;
             text-align: center;
-            flex-direction: column;
         }
         canvas {
             border: 3px solid #e91e63;
@@ -31,149 +27,83 @@
             color: #e91e63;
             margin-top: 20px;
         }
-        .controls {
-            margin-top: 10px;
-        }
-        button {
-            padding: 10px;
-            font-size: 18px;
-            margin: 5px;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            background-color: #ff4081;
-            color: white;
-        }
     </style>
 </head>
 <body>
-
-    <h1>Ayuda a Vale (👩) a recolectar los corazones ❤️ en el laberinto</h1>
-    <canvas id="gameCanvas" width="500" height="300"></canvas>
+    <h1>Ayuda a Vale (👩) a recolectar los corazones ❤️</h1>
+    <canvas id="gameCanvas" width="300" height="300"></canvas>
     <div class="message" id="winMessage">🎉 Mi Vale, ¿quieres ser mi San Valentín? 💕</div>
-    
-    <div class="controls">
-        <button onclick="moveUp()">⬆️</button><br>
-        <button onclick="moveLeft()">⬅️</button>
-        <button onclick="moveDown()">⬇️</button>
-        <button onclick="moveRight()">➡️</button>
-    </div>
-
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const winMessage = document.getElementById("winMessage");
-
         const tileSize = 30;
-        let vale = { x: 30, y: 30, width: tileSize, height: tileSize };
-        let collectedHearts = 0;
-
+        let vale = { x: 0, y: 0 };
+        let heartsCollected = 0;
         let hearts = [
-            { x: 60, y: 60, collected: false },
-            { x: 240, y: 60, collected: false },
-            { x: 180, y: 120, collected: false },
-            { x: 420, y: 120, collected: false },
-            { x: 300, y: 180, collected: false },
-            { x: 120, y: 180, collected: false },
-            { x: 360, y: 240, collected: false },
-            { x: 30, y: 240, collected: false },
-            { x: 450, y: 30, collected: false },
-            { x: 270, y: 270, collected: false }
+            { x: 60, y: 30 }, { x: 120, y: 90 }, { x: 180, y: 30 },
+            { x: 240, y: 90 }, { x: 30, y: 150 }, { x: 90, y: 210 },
+            { x: 150, y: 150 }, { x: 210, y: 210 }, { x: 270, y: 150 },
+            { x: 150, y: 270 }
         ];
-
-        let goal = { x: 450, y: 270, active: false };
-
+        let goal = { x: 270, y: 270, active: false };
         let walls = [
-            { x: 90, y: 0 }, { x: 90, y: 30 }, { x: 90, y: 60 },
-            { x: 90, y: 90 }, { x: 120, y: 90 }, { x: 150, y: 90 },
-            { x: 180, y: 90 }, { x: 210, y: 90 }, { x: 210, y: 120 },
-            { x: 210, y: 150 }, { x: 240, y: 150 }, { x: 270, y: 150 },
-            { x: 300, y: 150 }, { x: 300, y: 120 }, { x: 300, y: 90 },
-            { x: 330, y: 90 }, { x: 360, y: 90 }, { x: 360, y: 60 },
-            { x: 360, y: 30 }, { x: 360, y: 0 }, { x: 390, y: 0 },
-            { x: 420, y: 0 }, { x: 420, y: 30 }, { x: 420, y: 60 }
+            { x: 30, y: 60 }, { x: 30, y: 90 }, { x: 60, y: 90 },
+            { x: 90, y: 60 }, { x: 120, y: 60 }, { x: 150, y: 60 },
+            { x: 180, y: 60 }, { x: 180, y: 90 }, { x: 180, y: 120 },
+            { x: 210, y: 120 }, { x: 240, y: 120 }, { x: 240, y: 90 },
+            { x: 240, y: 60 }, { x: 270, y: 60 }, { x: 270, y: 30 },
+            { x: 270, y: 0 }
         ];
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Dibujar fondo (laberinto)
             ctx.fillStyle = "#e1bee7";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Dibujar paredes
             ctx.fillStyle = "#6a1b9a";
             walls.forEach(wall => ctx.fillRect(wall.x, wall.y, tileSize, tileSize));
-
-            // Dibujar a Vale (👩)
             ctx.fillText("👩", vale.x + 5, vale.y + 25);
-
-            // Dibujar corazones ❤️
             hearts.forEach(heart => {
-                if (!heart.collected) {
-                    ctx.fillText("❤️", heart.x + 5, heart.y + 25);
-                }
+                if (!heart.collected) ctx.fillText("❤️", heart.x + 5, heart.y + 25);
             });
-
-            // Dibujar la meta 🎯 si está activa
-            if (goal.active) {
-                ctx.fillText("🎯", goal.x + 5, goal.y + 25);
-            }
+            if (goal.active) ctx.fillText("🎯", goal.x + 5, goal.y + 25);
         }
 
         function update() {
             hearts.forEach(heart => {
                 if (!heart.collected && isColliding(vale, heart)) {
                     heart.collected = true;
-                    collectedHearts++;
+                    heartsCollected++;
                 }
             });
-
-            if (collectedHearts === 10) {
-                goal.active = true;
-            }
-
+            if (heartsCollected === 10) goal.active = true;
             if (goal.active && isColliding(vale, goal)) {
-                winMessage.style.display = "block";
+                document.getElementById("winMessage").style.display = "block";
             }
         }
 
         function isColliding(a, b) {
-            return (
-                a.x < b.x + tileSize &&
-                a.x + tileSize > b.x &&
-                a.y < b.y + tileSize &&
-                a.y + tileSize > b.y
-            );
+            return a.x === b.x && a.y === b.y;
         }
 
         function move(dx, dy) {
             let newX = vale.x + dx;
             let newY = vale.y + dy;
-
             if (!walls.some(wall => wall.x === newX && wall.y === newY)) {
                 vale.x = newX;
                 vale.y = newY;
             }
-
             update();
             draw();
         }
 
-        function moveUp() { if (vale.y > 0) move(0, -tileSize); }
-        function moveDown() { if (vale.y < canvas.height - tileSize) move(0, tileSize); }
-        function moveLeft() { if (vale.x > 0) move(-tileSize, 0); }
-        function moveRight() { if (vale.x < canvas.width - tileSize) move(tileSize, 0); }
-
         document.addEventListener("keydown", function(event) {
-            if (event.key === "ArrowUp") moveUp();
-            if (event.key === "ArrowDown") moveDown();
-            if (event.key === "ArrowLeft") moveLeft();
-            if (event.key === "ArrowRight") moveRight();
+            if (event.key === "ArrowUp" && vale.y > 0) move(0, -tileSize);
+            if (event.key === "ArrowDown" && vale.y < canvas.height - tileSize) move(0, tileSize);
+            if (event.key === "ArrowLeft" && vale.x > 0) move(-tileSize, 0);
+            if (event.key === "ArrowRight" && vale.x < canvas.width - tileSize) move(tileSize, 0);
         });
 
         draw();
     </script>
-
 </body>
 </html>
